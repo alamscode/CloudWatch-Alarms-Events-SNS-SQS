@@ -22,8 +22,6 @@ Resources:
       Subscription: 
         - Endpoint: !GetAtt AlamSqsQueue.Arn
           Protocol: sqs
-        - Endpoint: ahmed.alamkhan@yahoo.com
-          Protocol: email
       TopicName: CloudWatchAlarm-Alam
 
   AlamSqsQueue:
