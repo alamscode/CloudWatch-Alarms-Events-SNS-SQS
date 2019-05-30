@@ -1,0 +1,188 @@
+
+Parameters:
+
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+    Default: alam-keypair-N.V
+
+  IamRole:
+    Type: String
+    Default: CWAgentRole
+    ConstraintDescription: must be an existing IAM role which will be attached to EC2 instance.
+  
+  InstanceType:
+    Description: Webserver EC2 instance type
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t1.micro
+      - t2.nano
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m1.small
+      - m1.medium
+      - m1.large
+      - m1.xlarge
+      - m2.xlarge
+      - m2.2xlarge
+      - m2.4xlarge
+      - m3.medium
+      - m3.large
+      - m3.xlarge
+      - m3.2xlarge
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - c1.medium
+      - c1.xlarge
+      - c3.large
+      - c3.xlarge
+      - c3.2xlarge
+      - c3.4xlarge
+      - c3.8xlarge
+      - c4.large
+      - c4.xlarge
+      - c4.2xlarge
+      - c4.4xlarge
+      - c4.8xlarge
+      - g2.2xlarge
+      - g2.8xlarge
+      - r3.large
+      - r3.xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i2.xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+      - d2.xlarge
+      - d2.2xlarge
+      - d2.4xlarge
+      - d2.8xlarge
+      - hi1.4xlarge
+      - hs1.8xlarge
+      - cr1.8xlarge
+      - cc2.8xlarge
+      - cg1.4xlarge
+
+Mappings:
+  Settings:
+    MySQL:
+      Engine: MySQL
+      Version: '5.7'
+
+  RegionMap: 
+    us-east-1: 
+      "HVM64": "ami-0756fbca465a59a30"
+    us-east-2:
+      "HVM64": "ami-04768381bf606e2b3"
+    us-west-1: 
+      "HVM64": "ami-063dd30adbb186909"
+    eu-west-2: 
+      "HVM64": "ami-07a0c6e669965bb7c"
+    ap-south-1:
+      "HVM64": "ami-0eacc5b7915ba9921"
+    ap-northeast-2:
+      "HVM64": "ami-082b5ca9ff663f3b8"
+    ap-southeast-1: 
+      "HVM64": "ami-03097abf0db1cdff2"
+    ap-southeast-2:
+      "HVM64": "ami-05067171f4230ac41"
+    ap-northeast-1: 
+      "HVM64": "ami-0ccdbc8c1cb7957be"
+    ca-central-1:
+      "HVM64": "ami-07ab3281411d31d04"
+    eu-central-1:
+      "HVM64": "ami-03a71cec707bfc3d7"
+    eu-west-1:
+      "HVM64": "ami-03c242f4af81b2365"
+    eu-west-2:
+      "HVM64": "ami-05663d374a152d239"
+    eu-west-3:
+      "HVM64": "ami-0f962299dc4d90c81"
+    eu-north-1:
+      "HVM64": "ami-be4bc3c0"
+    sa-east-1:
+      "HVM64": "ami-0eb2a191bf5e40e10"
+
+
+Resources:
+
+  Webserver:
+    Type: AWS::EC2::Instance
+    Metadata:
+      Comment1: Configure the bootstrap helpers to install the Apache Web Server and
+        PHP
+      Comment2: Save website content to /var/www/html/index.php
+      AWS::CloudFormation::Init:
+        configSets:
+          Install:
+          - Install
+        Install:
+          packages:
+            yum:
+              php-mysql: []
+              mysql-server: []
+              httpd: []
+              php: []
+    Properties:
+      InstanceType:
+        !Ref InstanceType
+      SecurityGroupIds: 
+        - !ImportValue alamstack-InstanceSecurityGroup
+      KeyName:
+        !Ref KeyName
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", HVM64]
+      SubnetId: 
+        Fn::ImportValue: alamstack-PublicSubnet1
+      IamInstanceProfile: !Ref IamRole
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -x
+          sleep 90
+          yum install deltarpm -y
+          yum update -y
+          yum upgrade -y
+          yum install -y aws-cfn-bootstrap
+          /opt/aws/bin/cfn-init -v -s ${AWS::StackName} -r Webserver -c Install --region ${AWS::Region}
+          service httpd start
+          cd /var/www/html
+          echo "Hello Ahmed" >> index.html
+          cd ~
+          mkdir tempcloudwatch
+          cd tempcloudwatch
+          wget https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+          rpm -U ./amazon-cloudwatch-agent.rpm
+          wget https://s3.amazonaws.com/alamhtml/cloudwatchagent-linux-config.json
+          /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:cloudwatchagent-linux-config.json -s
+
+      Tags:
+        - Key: Name
+          Value: alamhere
+
+
+
+
+Outputs:
+  Webserver:
+    Value: !Ref Webserver
+    Export:
+      Name: !Sub "alamstack-Webserver"
+ 
+  KeyName:
+    Value: !Ref KeyName
+    Export:
+      Name: !Sub "alamstack-KeyName"
+
+  InstanceType:
+    Value: !Ref InstanceType
+    Export:
+      Name: alamstack-InstanceType

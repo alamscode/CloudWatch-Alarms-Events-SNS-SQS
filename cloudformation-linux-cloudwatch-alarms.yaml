@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Linux CloudWatch Alarms - CPU Memory Instance and System Status
+
+Parameters:
+
+  instanceid:
+    Description: "Choose an instance id"
+    Type: AWS::EC2::Instance::Id
+
+  instancename:
+    Description: "Please provide EC2 instance name"
+    Type: "String"
+    MinLength: '1'
+    MaxLength: '50'
+
+
+Resources:
+
+  SNSTopic:
+    Type: AWS::SNS::Topic
+    Properties: 
+      Subscription: 
+        - Endpoint: !GetAtt AlamSqsQueue.Arn
+          Protocol: sqs
+        - Endpoint: ahmed.alamkhan@yahoo.com
+          Protocol: email
+      TopicName: CloudWatchAlarm-Alam
+
+  AlamSqsQueue:
+    Type: AWS::SQS::Queue
+
+  CPUAlarmCRITICAL: 
+    Type: AWS::CloudWatch::Alarm
+    DeletionPolicy: Retain 
+    Properties:
+      AlarmDescription: !Sub "${instancename} - ${instanceid} - High CPU Usage 95%"
+      AlarmActions:
+      - !Ref SNSTopic
+      OKActions:
+      - !Ref SNSTopic
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: '900' 
+      EvaluationPeriods: '2'
+      Threshold: '95'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+      - Name: InstanceId
+        Value: !Ref instanceid
+
+
+  SystemStatusAlarmCRITICAL:
+    Type: AWS::CloudWatch::Alarm
+    DeletionPolicy: Retain
+    Properties:
+      AlarmDescription: !Sub "${instancename} - ${instanceid} - instance recovery process has been triggered because of failed System Status Check"
+      Namespace: AWS/EC2
+      MetricName: StatusCheckFailed_System
+      Statistic: Minimum
+      Period: '60'
+      EvaluationPeriods: '2'
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: '0'
+      AlarmActions:
+      - !Sub "arn:aws:automate:${AWS::Region}:ec2:recover"
+      - !Ref SNSTopic
+      OKActions:
+      - !Ref SNSTopic
+      Dimensions:
+      - Name: InstanceId
+        Value: !Ref instanceid
+
+  InstanceStatusAlarmCRITICAL: 
+    Type: AWS::CloudWatch::Alarm
+    DeletionPolicy: Retain
+    Properties:
+      AlarmDescription: !Sub "${instancename} - ${instanceid} - Instance Status Check Failed - please investigate. Troubleshooting: https://goo.gl/Ea27Gd"
+      Namespace: AWS/EC2
+      MetricName: StatusCheckFailed_Instance
+      Statistic: Minimum
+      Period: '60'
+      EvaluationPeriods: '3'
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: '0'
+      AlarmActions:
+      - !Ref SNSTopic
+      OKActions:
+      - !Ref SNSTopic
+      Dimensions:
+      - Name: InstanceId
+        Value: !Ref instanceid
+
+
+
+  EventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: detect-instance-changes
+      Description: A CloudWatch Event Rule that detects any changes to EC2 Instance service.
+      State: ENABLED
+      Targets:
+        - Arn:
+            Ref: SNSTopic
+          Id: target-id1
+      EventPattern:
+        source:
+          - aws.ec2
