@@ -5,7 +5,6 @@ Parameters:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
     Type: AWS::EC2::KeyPair::KeyName
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
-    Default: alam-keypair-N.V
 
   IamRole:
     Type: String
@@ -155,7 +154,7 @@ Resources:
           /opt/aws/bin/cfn-init -v -s ${AWS::StackName} -r Webserver -c Install --region ${AWS::Region}
           service httpd start
           cd /var/www/html
-          echo "Hello Ahmed" >> index.html
+          echo "Hello World" >> index.html
           cd ~
           mkdir tempcloudwatch
           cd tempcloudwatch
@@ -166,7 +165,7 @@ Resources:
 
       Tags:
         - Key: Name
-          Value: alamhere
+          Value: Instance
 
 
 
