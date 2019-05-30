@@ -47,7 +47,6 @@ Resources:
       - Name: InstanceId
         Value: !Ref instanceid
 
-
   SystemStatusAlarmCRITICAL:
     Type: AWS::CloudWatch::Alarm
     DeletionPolicy: Retain
@@ -88,8 +87,6 @@ Resources:
       Dimensions:
       - Name: InstanceId
         Value: !Ref instanceid
-
-
 
   EventRule:
     Type: AWS::Events::Rule
