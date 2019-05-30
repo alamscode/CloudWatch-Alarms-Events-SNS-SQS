@@ -78,35 +78,6 @@ Conditions:
 
 Resources:
 
-
-
-  # ApplicationServerSecurityGroup:
-  #   Type: AWS::EC2::SecurityGroup
-  #   Properties: 
-  #     VpcId: !Ref VPC
-  #     GroupDescription: Enable access through Web Sever only
-  #     SecurityGroupIngress:
-          
-  #       - IpProtocol: tcp
-  #         FromPort: 22
-  #         ToPort: 22
-  #         CidrIp: !Ref PublicSubnet1CIDR
-              
-  #       - IpProtocol: tcp
-  #         FromPort: 3306
-  #         ToPort: 3306
-  #         CidrIp: !Ref PublicSubnet1CIDR
-
-  #       - IpProtocol: tcp
-  #         FromPort: 22
-  #         ToPort: 22
-  #         CidrIp: !Ref PublicSubnet2CIDR
-
-  #       - IpProtocol: tcp
-  #         FromPort: 3306
-  #         ToPort: 3306
-  #         CidrIp: !Ref PublicSubnet2CIDR
-
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -122,23 +93,6 @@ Resources:
         FromPort: 80
         ToPort: 80
         CidrIp: 0.0.0.0/0
-
-  # PublicLoadBalancerSG:
-  #   Type: AWS::EC2::SecurityGroup
-  #   Properties: 
-  #     VpcId: !Ref VPC
-  #     GroupDescription: Security group to allow access to instances through Load Balancer
-  #     GroupName: alamcf-PublicLoadBalancerSG
-  #     SecurityGroupIngress:
-  #     - IpProtocol: tcp
-  #       FromPort: 80
-  #       ToPort: 80
-  #       CidrIp: 39.32.0.0/16
-
-  #     - IpProtocol: tcp
-  #       FromPort: 443
-  #       ToPort: 443
-  #       CidrIp: 39.32.0.0/0
 
   VPC:
     Type: AWS::EC2::VPC
@@ -331,49 +285,6 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable2
       SubnetId: !Ref PrivateSubnet2
 
-  # RdsSecurityGroup:
-  #   Type: AWS::EC2::SecurityGroup
-  #   Properties:
-  #     GroupDescription: App Server to RDS access
-  #     VpcId: !Ref VPC
-  #     Tags: 
-  #       - Key: Name
-  #         Value: !Ref BaseName
-  #     SecurityGroupIngress:
-  #       - IpProtocol: tcp
-  #         FromPort: !Ref TcpPort
-  #         ToPort: !Ref TcpPort
-  #         CidrIp: !Ref PrivateSubnet1CIDR
-
-  #       - IpProtocol: tcp
-  #         FromPort: 3306
-  #         ToPort: 3306
-  #         CidrIp: !Ref PrivateSubnet1CIDR
-
-  # AccessSecurityGroupIngress:
-  #   Type: AWS::EC2::SecurityGroupIngress
-  #   DependsOn: RdsSecurityGroup
-  #   Properties:
-  #     GroupId: !Ref RdsSecurityGroup
-  #     IpProtocol: tcp
-  #     FromPort: !Ref TcpPort
-  #     ToPort: !Ref TcpPort
-  #     SourceSecurityGroupId: !Ref RdsSecurityGroup
-  #     Tags:
-  #       - Key: Name
-  #         Value: !Ref BaseName
-
-  # DbSubnetGroup:
-  #   Type: AWS::RDS::DBSubnetGroup
-  #   Properties:
-  #     DBSubnetGroupDescription: 'Database Subnet Group'
-  #     SubnetIds:
-  #     - !Ref PrivateSubnet1
-  #     - !Ref PrivateSubnet2
-  #     Tags:
-  #       - Key: Name
-  #         Value: !Ref BaseName
-
 
 Outputs:
   VPC:
@@ -409,113 +320,9 @@ Outputs:
     Export:
       Name: !Sub "alamstack-PrivateSubnet1"
 
-  # PrivateSubnet2:
-  #   Description: A reference to the private subnet in the 2nd Availability Zone
-  #   Value: !Ref PrivateSubnet2
-
-
-
-
-
-  # ApplicationServerSecurityGroup:
-  #   Description: Private Security Group
-  #   Value: !Ref ApplicationServerSecurityGroup
-  #   Export:
-  #     Name: !Sub "alamstack-ApplicationServerSecurityGroup"
 
   InstanceSecurityGroup:
     Description: Public Sever Security Group
     Value: !Ref InstanceSecurityGroup
     Export:
       Name: !Sub "alamstack-InstanceSecurityGroup"
-
-
-  # InternetGateway:
-  #   Description: Internet Gateway
-  #   Value: !Ref InternetGateway
-
-  # InternetGatewayAttachment:
-  #   Description: Internet Gateway Attachment 
-  #   Value: !Ref InternetGatewayAttachment
-
-
-  # NatGateway1EIP:
-  #   Description: NatGateway 1 EIP
-  #   Value: !Ref NatGateway1EIP
-
-  # NatGateway2EIP:
-  #   Description: NatGateway 2 EIP
-  #   Value: !Ref NatGateway2EIP
-
-  # NatGateway1:
-  #   Description: NatGateway 1
-  #   Value: !Ref NatGateway1
-
-  # NatGateway2:
-  #   Description: NatGateway 2
-  #   Value: !Ref NatGateway2
-
-  # PublicRouteTable:
-  #   Description: Public Route Table
-  #   Value: !Ref PublicRouteTable
-
-  # DefaultPublicRoute:
-  #   Description: Default Public Route
-  #   Value: !Ref DefaultPublicRoute
-
-  # PublicSubnet1RouteTableAssociation:
-  #   Description: PublicSubnet 1 Route Table Association
-  #   Value: !Ref PublicSubnet1RouteTableAssociation
-
-  # PublicSubnet2RouteTableAssociation:
-  #   Description: Public Subnet 2 Route Table Association
-  #   Value: !Ref PublicSubnet2RouteTableAssociation
-
-  # PublicSubnet3RouteTableAssociation:
-  #   Description: Public Subnet 3 Route Table Association
-  #   Value: !Ref PublicSubnet3RouteTableAssociation
-
-  # PrivateRouteTable1:
-  #   Description: Private Route Table 1
-  #   Value: !Ref PrivateRouteTable1
-
-  # DefaultPrivateRoute1:
-  #   Description: Default Private Route 1
-  #   Value: !Ref DefaultPrivateRoute1
-
-  # PrivateSubnet1RouteTableAssociation:
-  #   Description: Private Subnet 1 Route Table Association 
-  #   Value: !Ref PrivateSubnet1RouteTableAssociation
-
-  # PrivateRouteTable2:
-  #   Description:  Private Route Table 2
-  #   Value: !Ref PrivateRouteTable2
-
-  # DefaultPrivateRoute2:
-  #   Description: Default Private Route 2 
-  #   Value: !Ref DefaultPrivateRoute2
-
-  # PrivateSubnet2RouteTableAssociation:
-  #   Description: Private Subnet 2 Route Table Association
-  #   Value: !Ref PrivateSubnet2RouteTableAssociation
-
-  # RdsSecurityGroup:
-  #   Description: Rds Security Group 
-  #   Value: !Ref RdsSecurityGroup
-  #   Export:
-  #     Name: !Sub "alamstack-RdsSecurityGroup"
-
-  # AccessSecurityGroupIngress:
-  #   Description: Access Security Group Ingress 
-  #   Value: !Ref AccessSecurityGroupIngress
-
-  # DbSubnetGroup:
-  #   Description: Database Subnet Group 
-  #   Value: !Ref DbSubnetGroup
-  #   Export:
-  #     Name: !Sub "alamstack-DbSubnetGroup"
-
-  # PublicLoadBalancerSG:
-  #   Value: !Ref PublicLoadBalancerSG
-  #   Export:
-  #     Name: !Sub "alamstack-PublicLoadBalancerSG"
